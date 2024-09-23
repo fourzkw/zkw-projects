@@ -19,8 +19,12 @@ public :
 	void DrawYearChoosePage(int currentYear, int choosingYear);
 	void DrawMonChoosePage(int choosingMon);
 	void DrawMDayChoosePage(int choosingMDay, int currentMon, int currentYear);
+	void DrawMenu(int choosing);
+	int getMenuNum() { return menuNum; }
 	float x1 = -1, x2 = -1;
 	TCHAR ch_year[10] = _T(""), ch_month[10] = _T(""), ch_mday[10] = _T(""), ch_wday[10] = _T("");
 	TCHAR detailTime[20] = _T("");
+private:
+	int menuNum = 2;
 };
 

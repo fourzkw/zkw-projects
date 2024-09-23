@@ -51,12 +51,12 @@ void DrawPages::DrawBasicPage(GetTime time, int x, bool isBatch)
     isBatch ? setfillcolor(RGB(200, 200, 200)) : setfillcolor(RGB(255, 255, 255));
     fillrectangle(210, 80, 270, 110);
 
-    //重要事项图标
-    setfillcolor(RGB(255, 0, 0));
+    //菜单图标
+    setfillcolor(RGB(255, 255, 255));
     fillrectangle(500, 80, 585, 120);
     settextcolor(RGB(0, 0, 0));
-    settextstyle(18, 0, _T("宋体"));
-    outtextxy(502, 90, _T("Important"));
+    settextstyle(25, 0, _T("宋体"));
+    outtextxy(517, 88, _T("Menu"));
 
     switch (x)
     {
@@ -262,4 +262,17 @@ void DrawPages::PrintTime(GetTime time)
 
     swprintf_s(detailTime, L"%d: %d: %d", time.p.tm_hour, time.p.tm_min, time.p.tm_sec);
     outtextxy(490, 20, detailTime);
+}
+
+void DrawPages::DrawMenu(int choosing)
+{
+    //菜单栏
+    setfillcolor(RGB(255, 255, 255));
+    for (int i = 1; i <= menuNum; i++)
+        fillrectangle(500, 40 + 40 * i, 585, 80 + 40 * i);
+    settextcolor(RGB(0, 0, 0));
+    settextstyle(18, 0, _T("宋体"));
+    outtextxy(502, 90, _T("Important"));
+    settextstyle(20, 0, _T("宋体"));
+    outtextxy(517, 130, _T("ToBuy"));
 }

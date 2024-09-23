@@ -2,6 +2,14 @@
 #include "Main.h"
 #include "Window.h"
 
+#define MAIN_PAGE   0
+#define YEAR_PAGE   1
+#define MON_PAGE    2
+#define MDAY_PAGE   3
+#define ADDTHING_PAGE   5
+#define IMPORTANT_PAGE  7
+#define MENU_PAGE   8
+
 using namespace std;
 
 DrawPages drawPages;
@@ -42,7 +50,7 @@ int main()
        getTime.GetTheTime();
 
         //主页面
-        if (currentPage == 0)
+        if (currentPage == MAIN_PAGE)
         {
             drawPages.DrawBasicPage(getTime, currentm, isBatch);
 
@@ -53,28 +61,28 @@ int main()
             FlushBatchDraw();
         }
         //年份选择
-        if (currentPage == 1)
+        if (currentPage == YEAR_PAGE)
         {
             getTime.curYear = getTime.getYear();
             currentPage = 0;
             currentm = -1;
         }
         //月份选择
-        if (currentPage == 2)
+        if (currentPage == MON_PAGE)
         {
             getTime.curMon = getTime.getMon();
             currentPage = 0;
             currentm = -1;
         }
         //日期选择
-        if (currentPage == 3)
+        if (currentPage == MDAY_PAGE)
         {
             getTime.curMDay = getTime.getMDay(getTime.curMon);
             currentPage = 0;
             currentm = -1;
         }
         //事项增添
-        if (currentPage == 5)
+        if (currentPage == ADDTHING_PAGE)
         {
             currentm = 0;
 
@@ -94,11 +102,19 @@ int main()
             FlushBatchDraw();
         }
         //重要事项
-        if (currentPage == 7) 
+        if (currentPage == IMPORTANT_PAGE) 
         {
             drawPages.DrawImportantThings();
             OutPutCurrentThings(2077, 12, 4);
             ThingsAction(2077, 12, 4);
+
+            FlushBatchDraw();
+        }
+
+        //菜单栏
+        if (currentPage == MENU_PAGE)
+        {
+            drawPages.DrawMenu(0);
 
             FlushBatchDraw();
         }
@@ -119,13 +135,13 @@ void PageChoose()
     getmessage(&mouseMessage, EX_MOUSE);
     if (mouseMessage.message == WM_LBUTTONDOWN)
     {
-         if (Tools::InRectangle(50, 20, 120, 60, mouseMessage) && currentPage == 0)        //年份选择
+         if (Tools::InRectangle(50, 20, 120, 60, mouseMessage) && currentPage == MAIN_PAGE)        //年份选择
                 currentPage = 1;
-         if (Tools::InRectangle(130, 20, 200, 60, mouseMessage) && currentPage == 0)       //月份选择
+         if (Tools::InRectangle(130, 20, 200, 60, mouseMessage) && currentPage == MAIN_PAGE)       //月份选择
                 currentPage = 2;
-         if (Tools::InRectangle(210, 20, 280, 60, mouseMessage) && currentPage == 0)       //日期选择
+         if (Tools::InRectangle(210, 20, 280, 60, mouseMessage) && currentPage == MAIN_PAGE)       //日期选择
                 currentPage = 3;
-         if (Tools::InRectangle(50, 80, 110, 110, mouseMessage) && (currentPage == 0 || currentPage == 7))     //增添事项页面
+         if (Tools::InRectangle(50, 80, 110, 110, mouseMessage) && (currentPage == MAIN_PAGE || currentPage == IMPORTANT_PAGE))     //增添事项页面
          {
              if (isBatch)
              {
@@ -136,15 +152,15 @@ void PageChoose()
                 currentPage = 5;
          }
          //重要事项页面
-         if (Tools::InRectangle(500, 80, 585, 120, mouseMessage) && currentPage == 0)
+         if (Tools::InRectangle(500, 80, 585, 120, mouseMessage) && currentPage == MENU_PAGE)
          {
-             currentPage = 7;
+             currentPage = IMPORTANT_PAGE;
              currentFirstNumber = 0;
              isImportant = true;
          }
 
          //重要事项页面返回主页面
-         if (Tools::InRectangle(500, 420, 585, 460, mouseMessage) && currentPage == 7)
+         if (Tools::InRectangle(500, 420, 585, 460, mouseMessage) && currentPage == IMPORTANT_PAGE)
          {
              currentPage = 0;
              currentFirstNumber = 0;
@@ -152,7 +168,7 @@ void PageChoose()
          }
 
         //删除当前事项
-        if (Tools::InRectangle(130, 80, 190, 110, mouseMessage) && (isImportant ? (thingNum[77][12][4] > 0) : (thingNum[getTime.curYear - 2000][getTime.curMon][getTime.curMDay] > 0)) && (currentPage == 0 || currentPage == 7))
+        if (Tools::InRectangle(130, 80, 190, 110, mouseMessage) && (isImportant ? (thingNum[77][12][4] > 0) : (thingNum[getTime.curYear - 2000][getTime.curMon][getTime.curMDay] > 0)) && (currentPage == MAIN_PAGE || currentPage == IMPORTANT_PAGE))
         {
             DeleteThing(currentChooseThing);
             currentChooseThing = -1;
@@ -195,6 +211,16 @@ void PageChoose()
         else if (Tools::InRectangle(210, 80, 270, 110, mouseMessage))
             currentm = 7;
         else currentm = 0;
+
+        //判断是否打开菜单栏
+        if (Tools::InRectangle(500, 80, 585, 120, mouseMessage) && currentPage == MAIN_PAGE)
+        {
+            currentPage = MENU_PAGE;
+        }
+        if (!Tools::InRectangle(500, 80, 585, 80 + drawPages.getMenuNum() * 40, mouseMessage) && currentPage == MENU_PAGE)
+        {
+            currentPage = MAIN_PAGE;
+        }
     }
     //事项翻页
     if (mouseMessage.message == WM_MOUSEWHEEL)

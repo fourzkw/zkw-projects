@@ -129,7 +129,6 @@
   <ItemGroup>
     <ClCompile Include="DrawPages.cpp" />
     <ClCompile Include="GetTime.cpp" />
-    <ClCompile Include="Item.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Tools.cpp" />
     <ClCompile Include="Window.cpp" />
@@ -137,7 +136,6 @@
   <ItemGroup>
     <ClInclude Include="DrawPages.h" />
     <ClInclude Include="GetTime.h" />
-    <ClInclude Include="Item.h" />
     <ClInclude Include="Main.h" />
     <ClInclude Include="Tools.h" />
     <ClInclude Include="Window.h" />

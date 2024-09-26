@@ -1,6 +1,7 @@
 #pragma once
 #include "DrawPages.h";
 
+extern bool isImportant, isToBuy;
 
 void DrawPages::DrawImportantThings()
 {
@@ -119,7 +120,10 @@ void DrawPages::DrawAddThingPage(GetTime time, bool isBatch)
     settextcolor(RGB(0, 0, 0));
     outtextxy(130, 173, _T("名称："));
     fillrectangle(210, 170, 500, 200);
-    outtextxy(130, 243, _T("数量："));
+    if(isToBuy)
+        outtextxy(130, 243, _T("价格："));
+    else 
+        outtextxy(130, 243, _T("数量："));
     fillrectangle(210, 240, 500, 270);
 
     //批量增加模式
@@ -275,4 +279,34 @@ void DrawPages::DrawMenu(int choosing)
     outtextxy(502, 90, _T("Important"));
     settextstyle(20, 0, _T("宋体"));
     outtextxy(517, 130, _T("ToBuy"));
+}
+
+void DrawPages::DrawToBuyPage()
+{
+    cleardevice();
+
+    setlinecolor(RGB(0, 0, 0));
+    setfillcolor(RGB(255, 255, 255));
+
+    //TOBUY标题
+    settextcolor(RGB(255, 0, 0));
+    settextstyle(30, 0, _T("宋体"));
+    outtextxy(40, 20, _T("TO BUY ITEMS"));
+
+    //返回图标
+    setfillcolor(RGB(255, 255, 255));
+    fillrectangle(520, 420, 620, 460);
+    settextcolor(RGB(0, 0, 0));
+    settextstyle(30, 0, _T("宋体"));
+    outtextxy(540, 425, _T("Back"));
+
+    //增添删减ITEM图标
+    fillrectangle(50, 80, 110, 110);
+    fillrectangle(130, 80, 190, 110);
+    settextcolor(RGB(0, 255, 0));
+    settextstyle(20, 0, _T("宋体"));
+    outtextxy(65, 85, _T("add"));
+    settextcolor(RGB(255, 0, 0));
+    settextstyle(18, 0, _T("宋体"));
+    outtextxy(133, 86, _T("delete"));
 }

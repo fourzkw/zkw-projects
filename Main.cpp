@@ -2,14 +2,6 @@
 #include "Main.h"
 #include "Window.h"
 
-#define MAIN_PAGE   0
-#define YEAR_PAGE   1
-#define MON_PAGE    2
-#define MDAY_PAGE   3
-#define ADDTHING_PAGE   5
-#define IMPORTANT_PAGE  7
-#define MENU_PAGE   8
-
 using namespace std;
 
 DrawPages drawPages;
@@ -21,12 +13,15 @@ int currentm;       //当前鼠标位置    1年 2月 3日
 
 
 int thingNum[100][13][32];
+int toBuyPrice[100];
 theThing tThing[100][13][32][10];
+theThing toBuyItem[100];
 int currentFirstNumber = 0;
 int currentChooseThing = -1;
 
 bool isImportant = 0;
 bool isBatch = 0;
+bool isToBuy = 0;
 
 TCHAR currentAddName[30], currentAddNum[30];
 
@@ -87,11 +82,17 @@ int main()
             currentm = 0;
 
             //批量状态和非重要状态则绘制批量模式
-            drawPages.DrawBasicPage(getTime, currentm, isBatch);
+            if (isImportant)
+                drawPages.DrawImportantThings();
+            else if (isToBuy)
+                drawPages.DrawToBuyPage();
+            else drawPages.DrawBasicPage(getTime, currentm, isBatch);
             drawPages.DrawAddThingPage(getTime, (isBatch && !isImportant));
 
             if (isImportant)
                 AddThingChance(2077, 12, 4, false);
+            else if(isToBuy)
+                AddThingChance(2099, 1, 1, false);
             else
                 AddThingChance(getTime.curYear, getTime.curMon, getTime.curMDay, isBatch);
 
@@ -101,6 +102,15 @@ int main()
 
             FlushBatchDraw();
         }
+
+        //菜单栏
+        if (currentPage == MENU_PAGE)
+        {
+            drawPages.DrawMenu(0);
+
+            FlushBatchDraw();
+        }
+
         //重要事项
         if (currentPage == IMPORTANT_PAGE) 
         {
@@ -111,10 +121,12 @@ int main()
             FlushBatchDraw();
         }
 
-        //菜单栏
-        if (currentPage == MENU_PAGE)
+        //WantToBuy
+        if (currentPage == TOBUY_PAGE)
         {
-            drawPages.DrawMenu(0);
+            drawPages.DrawToBuyPage();
+            OutPutCurrentThings(2099, 1, 1);
+            ThingsAction(2099, 1, 1);
 
             FlushBatchDraw();
         }
@@ -141,7 +153,7 @@ void PageChoose()
                 currentPage = 2;
          if (Tools::InRectangle(210, 20, 280, 60, mouseMessage) && currentPage == MAIN_PAGE)       //日期选择
                 currentPage = 3;
-         if (Tools::InRectangle(50, 80, 110, 110, mouseMessage) && (currentPage == MAIN_PAGE || currentPage == IMPORTANT_PAGE))     //增添事项页面
+         if (Tools::InRectangle(50, 80, 110, 110, mouseMessage) && (currentPage == MAIN_PAGE || currentPage == IMPORTANT_PAGE || currentPage == TOBUY_PAGE))     //增添事项页面
          {
              if (isBatch)
              {
@@ -149,37 +161,49 @@ void PageChoose()
                  getTime.dueMon = getTime.curMon;
                  getTime.dueMDay = getTime.curMDay;
              }
-                currentPage = 5;
-         }
-         //重要事项页面
-         if (Tools::InRectangle(500, 80, 585, 120, mouseMessage) && currentPage == MENU_PAGE)
-         {
-             currentPage = IMPORTANT_PAGE;
-             currentFirstNumber = 0;
-             isImportant = true;
-         }
-
-         //重要事项页面返回主页面
-         if (Tools::InRectangle(500, 420, 585, 460, mouseMessage) && currentPage == IMPORTANT_PAGE)
-         {
-             currentPage = 0;
-             currentFirstNumber = 0;
-             isImportant = false;
+             currentPage = 5;
          }
 
         //删除当前事项
-        if (Tools::InRectangle(130, 80, 190, 110, mouseMessage) && (isImportant ? (thingNum[77][12][4] > 0) : (thingNum[getTime.curYear - 2000][getTime.curMon][getTime.curMDay] > 0)) && (currentPage == MAIN_PAGE || currentPage == IMPORTANT_PAGE))
+        if (Tools::InRectangle(130, 80, 190, 110, mouseMessage) && (currentPage == MAIN_PAGE || currentPage == IMPORTANT_PAGE || currentPage == TOBUY_PAGE))
+            if (isImportant && thingNum[77][12][4] > 0|| isToBuy && thingNum[99][1][1] > 0|| (!isImportant && !isToBuy && thingNum[getTime.curYear - 2000][getTime.curMon][getTime.curMDay] > 0))
+            {
+                DeleteThing(currentChooseThing);
+                currentChooseThing = -1;
+                OnDownLoad();
+            }
+
+        //重要事项页面
+        if (Tools::InRectangle(500, 80, 585, 120, mouseMessage) && currentPage == MENU_PAGE)
         {
-            DeleteThing(currentChooseThing);
-            currentChooseThing = -1;
-            OnDownLoad();
+            currentPage = IMPORTANT_PAGE;
+            currentFirstNumber = 0;
+            isImportant = true;
         }
+
+         //TOBUY PAGE
+        if (Tools::InRectangle(500, 120, 585, 160, mouseMessage) && currentPage == MENU_PAGE)
+        {
+            currentPage = TOBUY_PAGE;
+            currentFirstNumber = 0;
+            isToBuy = true;
+        }
+
+         //重要事项、TOBUY返回主页面
+        if (Tools::InRectangle(500, 420, 585, 460, mouseMessage) && (currentPage == IMPORTANT_PAGE || currentPage == TOBUY_PAGE))
+        {
+            currentPage = 0;
+            currentFirstNumber = 0;
+            isImportant = false;
+            isToBuy = false;
+        }
+
 
         //重置当前时间
         if (Tools::InRectangle(290, 20, 360, 60, mouseMessage))
         {
             getTime.ResetTime();
-        }
+         }
         
         //转换是否批量增添事项
         if (Tools::InRectangle(210, 80, 270, 110, mouseMessage) && currentPage == 0)
@@ -222,6 +246,7 @@ void PageChoose()
             currentPage = MAIN_PAGE;
         }
     }
+
     //事项翻页
     if (mouseMessage.message == WM_MOUSEWHEEL)
     {
@@ -253,17 +278,22 @@ void AddThingChance(int curYear,int curMon, int curMDay, bool isBatch)
         }
 
         //非批量情况
-        if (!isBatch || isImportant)
+        if (!isBatch || isImportant || isToBuy)
         {
             //取消
             if (Tools::InRectangle(270, 300, 330, 330, mouseMessage))
             {
-                isImportant ? currentPage = 7 : currentPage = 0;
+                if (isImportant) currentPage = IMPORTANT_PAGE;
+                else if (isToBuy)currentPage = TOBUY_PAGE;
+                else currentPage = MAIN_PAGE;
             }
             //确定
             if (Tools::InRectangle(190, 300, 250, 330, mouseMessage))
             {
-                isImportant ? currentPage = 7 : currentPage = 0;
+                if (isImportant) currentPage = IMPORTANT_PAGE;
+                else if (isToBuy)currentPage = TOBUY_PAGE;
+                else currentPage = MAIN_PAGE;
+
                 theThing x;
                 _tcscpy_s(x.theName, 20, currentAddName);
                 x.totalNum = _wtoi(currentAddNum);
@@ -337,20 +367,39 @@ void AddThingChance(int curYear,int curMon, int curMDay, bool isBatch)
 //输出当前事项
 void OutPutCurrentThings(int curYear, int curMon, int curMDay)
 {
-    for (int i = currentFirstNumber; i < min(currentFirstNumber + 5, thingNum[curYear - 2000][curMon][curMDay]); i++)
+    if (isToBuy)
     {
-        if (tThing[curYear - 2000][curMon][curMDay][i].finishNum >= tThing[curYear - 2000][curMon][curMDay][i].totalNum)setfillcolor(RGB(0, 255, 0));
-        else if (i != currentChooseThing)setfillcolor(RGB(255, 255, 255));
-        else setfillcolor(RGB(200, 200, 200));
-        fillrectangle(50, 130 + (i - currentFirstNumber) * 60, wS.x - 50, 190 + (i - currentFirstNumber) * 60);
-        TCHAR ch[20];
-        _tcscpy_s(ch, 20, tThing[curYear - 2000][curMon][curMDay][i].theName);
-        settextcolor(RGB(0, 0, 0));
-        outtextxy(60, 140 + (i - currentFirstNumber) * 60, ch);
-        int totalNum = tThing[curYear - 2000][curMon][curMDay][i].totalNum;
-        int finishNum = tThing[curYear - 2000][curMon][curMDay][i].finishNum;
-        swprintf_s(ch, _T("%d / %d"), finishNum, totalNum);
-        outtextxy(300, 140 + (i - currentFirstNumber) * 60, ch);
+        for (int i = currentFirstNumber; i < min(currentFirstNumber + 5, thingNum[99][1][1]); i++)
+        {
+            if (tThing[99][1][1][i].finishNum >= tThing[99][1][1][i].totalNum)setfillcolor(RGB(0, 255, 0));
+            else if (i != currentChooseThing)setfillcolor(RGB(255, 255, 255));
+            else setfillcolor(RGB(200, 200, 200));
+            fillrectangle(50, 130 + (i - currentFirstNumber) * 60, wS.x - 50, 190 + (i - currentFirstNumber) * 60);
+            TCHAR ch[20];
+            _tcscpy_s(ch, 20, tThing[99][1][1][i].theName);
+            settextcolor(RGB(0, 0, 0));
+            outtextxy(60, 140 + (i - currentFirstNumber) * 60, ch);
+            swprintf_s(ch, _T("%d"), tThing[99][1][1][i].totalNum);
+            outtextxy(300, 140 + (i - currentFirstNumber) * 60, ch);
+        }
+    }
+    else
+    {
+        for (int i = currentFirstNumber; i < min(currentFirstNumber + 5, thingNum[curYear - 2000][curMon][curMDay]); i++)
+        {
+            if (tThing[curYear - 2000][curMon][curMDay][i].finishNum >= tThing[curYear - 2000][curMon][curMDay][i].totalNum)setfillcolor(RGB(0, 255, 0));
+            else if (i != currentChooseThing)setfillcolor(RGB(255, 255, 255));
+            else setfillcolor(RGB(200, 200, 200));
+            fillrectangle(50, 130 + (i - currentFirstNumber) * 60, wS.x - 50, 190 + (i - currentFirstNumber) * 60);
+            TCHAR ch[20];
+            _tcscpy_s(ch, 20, tThing[curYear - 2000][curMon][curMDay][i].theName);
+            settextcolor(RGB(0, 0, 0));
+            outtextxy(60, 140 + (i - currentFirstNumber) * 60, ch);
+            int totalNum = tThing[curYear - 2000][curMon][curMDay][i].totalNum;
+            int finishNum = tThing[curYear - 2000][curMon][curMDay][i].finishNum;
+            swprintf_s(ch, _T("%d / %d"), finishNum, totalNum);
+            outtextxy(300, 140 + (i - currentFirstNumber) * 60, ch);
+        }
     }
 }
 
@@ -421,7 +470,10 @@ void ThingsAction(int curYear, int curMon, int curMDay)
     {
         if (Tools::InRectangle(50, 130 + (currentChooseThing - currentFirstNumber) * 60, wS.x - 50, 190 + (currentChooseThing - currentFirstNumber) * 60, mouseMessage) && tThing[curYear - 2000][curMon][curMDay][currentChooseThing].finishNum < tThing[curYear - 2000][curMon][curMDay][currentChooseThing].totalNum)
         {
-            tThing[curYear - 2000][curMon][curMDay][currentChooseThing].finishNum++;
+            if(isToBuy)
+                tThing[curYear - 2000][curMon][curMDay][currentChooseThing].finishNum = tThing[curYear - 2000][curMon][curMDay][currentChooseThing].totalNum;
+            else 
+                tThing[curYear - 2000][curMon][curMDay][currentChooseThing].finishNum++;
             OnDownLoad();
         }
     }
@@ -429,7 +481,10 @@ void ThingsAction(int curYear, int curMon, int curMDay)
     {
         if (Tools::InRectangle(50, 130 + (currentChooseThing - currentFirstNumber) * 60, wS.x - 50, 190 + (currentChooseThing - currentFirstNumber) * 60, mouseMessage) && tThing[curYear - 2000][curMon][curMDay][currentChooseThing].finishNum > 0)
         {
-            tThing[curYear - 2000][curMon][curMDay][currentChooseThing].finishNum--;
+            if (isToBuy)
+                tThing[curYear - 2000][curMon][curMDay][currentChooseThing].finishNum = 0;
+            else
+                tThing[curYear - 2000][curMon][curMDay][currentChooseThing].finishNum--;
             OnDownLoad();
         }
     }
@@ -447,6 +502,14 @@ void DeleteThing(int x)
             tThing[77][12][4][i] = tThing[77][12][4][i + 1];
         }
         thingNum[77][12][4]--;
+    }
+    else if (isToBuy)
+    {
+        for (int i = x; i < thingNum[99][1][1] - 1; i++)
+        {
+            tThing[99][1][1][i] = tThing[99][1][1][i + 1];
+        }
+        thingNum[99][1][1]--;
     }
     else
     {

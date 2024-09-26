@@ -8,6 +8,8 @@
 #include <graphics.h>
 #include <direct.h>
 #include "GetTime.h"
+#include "Main.h"
+
 
 class DrawPages
 {
@@ -20,6 +22,7 @@ public :
 	void DrawMonChoosePage(int choosingMon);
 	void DrawMDayChoosePage(int choosingMDay, int currentMon, int currentYear);
 	void DrawMenu(int choosing);
+	void DrawToBuyPage();
 	int getMenuNum() { return menuNum; }
 	float x1 = -1, x2 = -1;
 	TCHAR ch_year[10] = _T(""), ch_month[10] = _T(""), ch_mday[10] = _T(""), ch_wday[10] = _T("");

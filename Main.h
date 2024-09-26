@@ -12,6 +12,15 @@
 #include "GetTime.h"
 #include "Tools.h"
 
+#define MAIN_PAGE   0
+#define YEAR_PAGE   1
+#define MON_PAGE    2
+#define MDAY_PAGE   3
+#define ADDTHING_PAGE   5
+#define IMPORTANT_PAGE  7
+#define MENU_PAGE   8
+#define TOBUY_PAGE  9
+
 struct theThing
 {
 	TCHAR theName[30];
@@ -28,7 +37,6 @@ struct timer
 void OnLoad();
 void OnDownLoad();
 void PageChoose();
-//bool InRectangle(int x1, int y1, int x2, int y2, ExMessage m);
 void AddThingChance(int curYear, int curMon, int curMDay, bool isBatch);
 void OutPutCurrentThings(int curYear, int curMon, int curMDay);
 void TimeWait(timer *t);
